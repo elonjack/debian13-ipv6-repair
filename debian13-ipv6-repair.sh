@@ -601,14 +601,13 @@ ensure_dhcpcd_noipv6rs() {
         }
     fi
 
-    if ! cat >>"$temporary_file" <<EOF
+    if ! cat >>"$temporary_file" <<EOF; then
 
 ${MANAGED_BEGIN} interface=${iface}
 interface ${iface}
 noipv6rs
 ${MANAGED_END}
 EOF
-    then
         rm -f -- "$temporary_file"
         return 1
     fi
@@ -626,20 +625,19 @@ write_mode_sysctl() {
 
     case "$mode" in
         static)
-            if ! cat >"$temporary_file" <<EOF
+            if ! cat >"$temporary_file" <<EOF; then
 # Managed by debian13-ipv6-repair ${SCRIPT_VERSION}
 # Static IPv6 is configured by ifupdown; reject kernel RA/SLAAC on ${iface}.
 net.ipv6.conf.${iface}.accept_ra=0
 net.ipv6.conf.${iface}.autoconf=0
 net.ipv6.conf.${iface}.use_tempaddr=0
 EOF
-            then
                 rm -f -- "$temporary_file"
                 return 1
             fi
             ;;
         auto)
-            if ! cat >"$temporary_file" <<EOF
+            if ! cat >"$temporary_file" <<EOF; then
 # Managed by debian13-ipv6-repair ${SCRIPT_VERSION}
 # ifupdown inet6 auto owns IPv6; use kernel RA with MAC-based EUI-64.
 net.ipv6.conf.${iface}.accept_ra=2
@@ -647,7 +645,6 @@ net.ipv6.conf.${iface}.autoconf=1
 net.ipv6.conf.${iface}.use_tempaddr=0
 net.ipv6.conf.${iface}.addr_gen_mode=0
 EOF
-            then
                 rm -f -- "$temporary_file"
                 return 1
             fi
