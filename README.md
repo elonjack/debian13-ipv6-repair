@@ -12,6 +12,20 @@
 
 ## 使用
 
+从最新 Release 下载并校验后运行：
+
+```bash
+curl -fL -o debian13-ipv6-repair.sh \
+  https://github.com/elonjack/debian13-ipv6-repair/releases/latest/download/debian13-ipv6-repair.sh
+curl -fL -o SHA256SUMS \
+  https://github.com/elonjack/debian13-ipv6-repair/releases/latest/download/SHA256SUMS
+sha256sum -c SHA256SUMS
+chmod +x debian13-ipv6-repair.sh
+sudo ./debian13-ipv6-repair.sh
+```
+
+也可以克隆仓库后运行：
+
 ```bash
 chmod +x debian13-ipv6-repair.sh
 sudo ./debian13-ipv6-repair.sh
