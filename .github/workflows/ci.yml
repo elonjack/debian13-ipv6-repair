@@ -23,3 +23,5 @@ jobs:
           shfmt -d -i 4 -ci debian13-ipv6-repair.sh install.sh tests/unit.sh
       - name: Unit tests
         run: bash tests/unit.sh
+      - name: Release checksum
+        run: sha256sum --check SHA256SUMS
