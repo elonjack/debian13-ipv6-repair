@@ -81,4 +81,17 @@ assert_success has_effective_noipv6rs ens3
 ensure_dhcpcd_noipv6rs ens3
 assert_eq "1" "$(grep -Fc "$MANAGED_BEGIN interface=ens3" "$DHCPCD_CONF")" "managed block idempotency"
 
+# Isolate provider-address verification from the live CI network while still
+# exercising the mode-specific decision logic and loopback's real MAC address.
+assigned_ipv6() {
+    printf '%s' "$2"
+}
+address_is_kernel_ra() {
+    return 0
+}
+assert_success verify_provider_address lo static "2001:db8::1" "2001:db8::1"
+assert_failure verify_provider_address lo static "2001:db8::1" "2001:db8::2"
+assert_success verify_provider_address lo auto "2001:db8::200:ff:fe00:0"
+assert_failure verify_provider_address lo auto "2001:db8::dead:beef"
+
 printf 'All unit tests passed.\n'

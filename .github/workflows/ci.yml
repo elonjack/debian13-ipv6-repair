@@ -25,3 +25,16 @@ jobs:
         run: bash tests/unit.sh
       - name: Release checksum
         run: sha256sum --check SHA256SUMS
+
+  debian-13:
+    runs-on: ubuntu-latest
+    container: debian:13-slim
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install test dependencies
+        run: apt-get update && apt-get install --yes bash iproute2
+      - name: Debian 13 syntax and unit tests
+        run: |
+          bash -n debian13-ipv6-repair.sh install.sh tests/unit.sh
+          bash tests/unit.sh
+          sha256sum --check SHA256SUMS

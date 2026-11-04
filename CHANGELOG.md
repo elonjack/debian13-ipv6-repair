@@ -14,6 +14,7 @@
 - Validate public-IP endpoint responses as actual IPv6 literals.
 - Require the default route source and public-IP echo to equal the expected address.
 - Refuse explicit ifupdown options that would override the repair during boot.
+- Run syntax, unit and checksum tests inside an actual Debian 13 container.
 
 ## 1.1.0 - 2026-11-04
 
