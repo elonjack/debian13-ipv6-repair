@@ -5,7 +5,7 @@
 
 set -uo pipefail
 
-SCRIPT_VERSION="1.0.0"
+SCRIPT_VERSION="1.1.0"
 STATE_DIR="/var/lib/debian13-ipv6-repair"
 PENDING_FILE="${STATE_DIR}/pending"
 BACKUP_ROOT="/var/backups/debian13-ipv6-repair"
@@ -13,7 +13,7 @@ DHCPCD_CONF="/etc/dhcpcd.conf"
 MANAGED_BEGIN="# BEGIN debian13-ipv6-repair"
 MANAGED_END="# END debian13-ipv6-repair"
 
-if [[ -t 1 ]]; then
+if [[ -t 1 && ${TERM:-dumb} != "dumb" && -z ${NO_COLOR:-} ]]; then
     C_RESET='\033[0m'
     C_RED='\033[31m'
     C_GREEN='\033[32m'
@@ -37,6 +37,14 @@ pause_screen() {
     read -r -p "按回车键返回菜单..." _
 }
 
+require_interactive_terminal() {
+    if [[ ! -t 0 ]]; then
+        err "本工具需要交互式终端，不能通过管道或无 TTY 环境运行。"
+        err "请先下载脚本，再执行：sudo ./debian13-ipv6-repair.sh"
+        exit 1
+    fi
+}
+
 require_root() {
     if [[ ${EUID:-$(id -u)} -ne 0 ]]; then
         err "请使用 root 运行：sudo bash $0"
@@ -47,7 +55,7 @@ require_root() {
 require_commands() {
     local missing=()
     local cmd
-    for cmd in ip awk sed grep cut wc curl pgrep find date cp mkdir sysctl; do
+    for cmd in ip awk sed grep curl pgrep find date cp mkdir mktemp chmod touch basename rm reboot; do
         command -v "$cmd" >/dev/null 2>&1 || missing+=("$cmd")
     done
     if ((${#missing[@]} > 0)); then
@@ -83,6 +91,12 @@ detect_interface() {
         iface=$(ip -6 route show default 2>/dev/null | awk 'NR == 1 {print $5}')
     fi
     printf '%s' "$iface"
+}
+
+validate_interface_name() {
+    # Keep interface-derived sysctl keys and file names within a conservative,
+    # ordinary Linux interface-name subset.
+    [[ $1 =~ ^[[:alnum:]_.-]{1,15}$ ]]
 }
 
 collect_interface_files() {
@@ -167,8 +181,11 @@ validate_expected_ipv6() {
         address=$raw
     fi
 
-    [[ $address == *:* ]] || return 1
-    [[ $address =~ ^[0-9A-Fa-f:.]+$ ]] || return 1
+    [[ $address == *:* && $address != *%* ]] || return 1
+
+    # Let iproute2 perform the actual IPv6 parser validation. `addr show` is
+    # read-only and also works when the host currently has no IPv6 default route.
+    ip -6 addr show to "${address}/128" >/dev/null 2>&1
 }
 
 other_network_manager_active() {
@@ -390,8 +407,9 @@ backup_configs() {
     local iface=$1
     local stamp backup_dir file
     stamp=$(date +%Y%m%d-%H%M%S)
-    backup_dir="${BACKUP_ROOT}/${stamp}-${iface}"
-    mkdir -p "$backup_dir"
+    mkdir -p "$BACKUP_ROOT"
+    chmod 700 "$BACKUP_ROOT"
+    backup_dir=$(mktemp -d "${BACKUP_ROOT}/${stamp}-${iface}.XXXXXX")
     chmod 700 "$backup_dir"
 
     [[ -f $DHCPCD_CONF ]] && cp -a "$DHCPCD_CONF" "$backup_dir/dhcpcd.conf"
@@ -450,7 +468,7 @@ EOF
             ;;
     esac
 
-    sysctl -p "$sysctl_file" >/dev/null
+    chmod 644 "$sysctl_file"
 }
 
 mark_pending() {
@@ -491,6 +509,10 @@ run_audit_and_repair() {
     iface=$(detect_interface)
     if [[ -z $iface ]]; then
         err "未找到默认出口网卡。"
+        return 1
+    fi
+    if ! validate_interface_name "$iface"; then
+        err "网卡名称不在脚本的安全处理范围内：$iface"
         return 1
     fi
 
@@ -611,13 +633,18 @@ show_menu() {
         if [[ -t 1 ]]; then
             clear
         fi
+        printf '%b' "$C_YELLOW"
         printf '========================================\n'
         printf ' Debian 13 IPv6 检查与修复工具 v%s\n' "$SCRIPT_VERSION"
         printf '========================================\n'
         printf ' 1) 检查并按需修复 IPv6\n'
         printf ' 0) 退出\n'
         printf '========================================\n'
-        read -r -p "请选择 [0-1]： " choice
+        printf '请选择 [0-1]：%b ' "$C_RESET"
+        if ! read -r choice; then
+            printf '\n'
+            return 0
+        fi
         case "$choice" in
             1)
                 run_audit_and_repair
@@ -639,4 +666,5 @@ if [[ ${D13_IPV6_REPAIR_LIBRARY:-0} == "1" ]]; then
 fi
 
 require_root
+require_interactive_terminal
 show_menu

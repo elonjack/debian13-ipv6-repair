@@ -13,8 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Bash syntax
-        run: bash -n debian13-ipv6-repair.sh tests/unit.sh
+        run: bash -n debian13-ipv6-repair.sh install.sh tests/unit.sh
       - name: ShellCheck
-        run: shellcheck debian13-ipv6-repair.sh tests/unit.sh
+        run: shellcheck debian13-ipv6-repair.sh install.sh tests/unit.sh
+      - name: Formatting
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shfmt
+          shfmt -d -i 4 -ci debian13-ipv6-repair.sh install.sh tests/unit.sh
       - name: Unit tests
         run: bash tests/unit.sh

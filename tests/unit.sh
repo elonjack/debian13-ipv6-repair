@@ -35,6 +35,11 @@ assert_success validate_expected_ipv6 "2001:db8::1/64"
 assert_failure validate_expected_ipv6 "192.0.2.1"
 assert_failure validate_expected_ipv6 "2001:db8::1/129"
 assert_failure validate_expected_ipv6 "not-an-ip"
+assert_failure validate_expected_ipv6 "::::"
+assert_success validate_interface_name "ens3"
+assert_success validate_interface_name "enp0s3.100"
+assert_failure validate_interface_name "bad/name"
+assert_failure validate_interface_name "interface-name-is-too-long"
 
 tmp_dir=$(mktemp -d)
 trap 'rm -rf "$tmp_dir"' EXIT

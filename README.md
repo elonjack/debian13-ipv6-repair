@@ -12,6 +12,14 @@
 
 ## 使用
 
+真正的一行启动命令（启动器会下载并校验主脚本）：
+
+```bash
+bash <(curl -fsSL https://github.com/elonjack/debian13-ipv6-repair/releases/latest/download/install.sh)
+```
+
+这是一行命令，但依然属于“下载远程启动器并执行”。希望在执行前先查看全部文件时，请使用下面的手动校验流程。
+
 从最新 Release 下载并校验后运行：
 
 ```bash
@@ -36,6 +44,8 @@ sudo ./debian13-ipv6-repair.sh
 ```text
 1) 检查并按需修复 IPv6
 ```
+
+交互式菜单在支持颜色的终端中使用黄色显示；设置 `NO_COLOR=1` 可关闭颜色。脚本拒绝无 TTY/管道方式执行，避免提示输入缺失时误操作。
 
 脚本会先完成只读检查，包括：
 
@@ -88,6 +98,7 @@ noipv6rs
 
 - 不自动安装依赖；
 - 不在线执行 `ifdown`、重启 networking 或终止 dhcpcd；
+- 不在线加载新写入的 sysctl 参数，所有网络变更统一在用户确认重启后生效；
 - 修改前备份到 `/var/backups/debian13-ipv6-repair/`；
 - 所有写入均可重复执行，不会重复追加管理块；
 - 首次运行只写入修复配置，并明确标记“等待重启验证”；
