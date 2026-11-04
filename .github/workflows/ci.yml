@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax
+        run: bash -n debian13-ipv6-repair.sh tests/unit.sh
+      - name: ShellCheck
+        run: shellcheck debian13-ipv6-repair.sh tests/unit.sh
+      - name: Unit tests
+        run: bash tests/unit.sh
