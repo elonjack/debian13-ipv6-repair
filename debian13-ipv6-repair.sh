@@ -635,7 +635,7 @@ show_menu() {
 }
 
 if [[ ${D13_IPV6_REPAIR_LIBRARY:-0} == "1" ]]; then
-    return 0 2>/dev/null || exit 0
+    return 0
 fi
 
 require_root

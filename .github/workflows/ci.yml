@@ -11,7 +11,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Bash syntax
         run: bash -n debian13-ipv6-repair.sh tests/unit.sh
       - name: ShellCheck

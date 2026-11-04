@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 export D13_IPV6_REPAIR_LIBRARY=1
-# shellcheck source=../debian13-ipv6-repair.sh
+# shellcheck disable=SC1091
 source "$ROOT_DIR/debian13-ipv6-repair.sh"
 
 fail() {
